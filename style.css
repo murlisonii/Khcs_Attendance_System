@@ -1,0 +1,94 @@
+:root{
+    --bg-1: #0f172a;
+    --bg-2: #071025;
+    --card: rgba(255,255,255,0.06);
+    --muted: rgba(255,255,255,0.65);
+        --accent: #10b981; /* calm green accent for healthcare */
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    color: #e6eef8;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+}
+
+/* Header */
+.site-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    padding:18px 28px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.site-header .facility{font-size:0.85rem;color:var(--muted);margin-bottom:4px}
+.site-header .current-date{font-weight:600}
+.logo-wrap{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px}
+.site-title h1{margin:0;font-size:1.1rem;font-weight:600}
+.tagline{margin:0;font-size:0.8rem;color:var(--muted)}
+.status{font-size:0.85rem;color:var(--muted)}
+
+/* Main area */
+.main{flex:1;display:flex;align-items:center;justify-content:center;padding:32px}
+/* layout: video, controls and attendance log */
+.video-panel{display:flex;flex-direction:column;gap:18px;align-items:center;width:100%;max-width:1100px}
+.video-container{position:relative;width:600px;max-width:92vw}
+
+/* On wider screens put controls and log to the right of video */
+@media (min-width:980px){
+    .video-panel{flex-direction:row;align-items:flex-start;justify-content:space-between}
+    .video-container{flex:1;margin-right:20px}
+    .controls{width:320px}
+    .attendance-log{width:320px}
+}
+video{display:block;width:100%;height:auto;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.6);background:#000}
+
+/* overlay canvas (face-api draws into this) */
+canvas{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100% !important;
+    height:100% !important;
+    pointer-events:none;
+    border-radius:12px;
+}
+
+.card{background:var(--card);padding:14px 18px;border-radius:10px;color:var(--muted);box-shadow:0 6px 18px rgba(2,6,23,0.55)}
+.attendance-log{display:flex;flex-direction:column;gap:10px}
+.log-header{display:flex;justify-content:space-between;align-items:center}
+.log-header h3{margin:0;font-size:1rem}
+.log-meta{font-size:0.85rem;color:var(--muted)}
+.att-list{margin:0;padding-left:18px;max-height:260px;overflow:auto}
+.att-list li{padding:6px 8px;border-radius:6px;margin-bottom:6px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);display:flex;justify-content:space-between;align-items:center}
+.log-actions{display:flex;justify-content:flex-end}
+.btn-secondary{background:transparent;border:1px solid rgba(255,255,255,0.08);color:var(--muted)}
+.btn-secondary:disabled{opacity:0.45}
+.controls p{margin:0 0 8px 0}
+.controls ul{margin:0;padding-left:18px}
+
+.control-actions{display:flex;gap:10px;margin-top:12px;align-items:center}
+.btn{appearance:none;border:0;padding:10px 14px;border-radius:8px;font-weight:600;cursor:pointer;background:transparent;color:#e6eef8;border:1px solid rgba(255,255,255,0.06)}
+.btn:disabled{opacity:0.45;cursor:not-allowed}
+.btn-primary{background:linear-gradient(90deg,var(--accent),#06b6d4);color:#071025;border:0;box-shadow:0 6px 18px rgba(12,10,26,0.6)}
+.session-input{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:active:not(:disabled){transform:translateY(0)}
+
+.site-footer{padding:12px 20px;text-align:center;color:var(--muted);font-size:0.85rem;border-top:1px solid rgba(255,255,255,0.02)}
+
+@media (max-width:640px){
+    .site-header{padding:12px}
+    .logo{width:36px;height:36px}
+    .video-container{width:92vw}
+}

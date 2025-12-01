@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Att Face — Browser face detection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="face-api.min.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo-wrap">
+      <img src="assets/logo.svg" alt="Krishna Health Care logo" class="logo">
+      <div class="site-title">
+        <h1>Krishna Health Care Services</h1>
+        <p class="tagline">Caretaker attendance — automated face recognition</p>
+      </div>
+    </div>
+    <div class="brand-actions">
+      <div class="header-meta">
+        <div class="facility">Matki Chauraha, BJS — Jodhpur</div>
+        <div id="current-date" class="current-date"></div>
+      </div>
+      <span id="status" class="status">Loading models…</span>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="video-panel">
+      <div class="video-container">
+        <video id="video" width="600" height="450" autoplay muted playsinline></video>
+      </div>
+
+      <div class="controls card">
+        <p>Allow camera access when prompted. This demo loads labelled faces from <code>./labels</code> and models from <code>/models</code>.</p>
+        <ul>
+          <li>Sample labels: <strong>moksh</strong>, <strong>shashtika</strong></li>
+          <li>Detection runs continuously and draws boxes on the video.</li>
+        </ul>
+
+        <div class="control-actions">
+          <button id="start-att-btn" class="btn btn-primary" disabled>Start Attendance</button>
+          <button id="stop-att-btn" class="btn" disabled>End Attendance</button>
+        </div>
+        <div class="session-actions" style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+          <label for="session-name" style="font-size:0.85rem;color:var(--muted)">Session name (e.g. Morning shift)</label>
+          <input id="session-name" class="session-input" placeholder="Session name (optional)" />
+          <div style="display:flex;gap:8px">
+            <input id="manual-name-input" class="session-input" placeholder="Add name manually" />
+            <button id="manual-add-btn" class="btn">Add</button>
+            <button id="clear-session-btn" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06)">Clear Session</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="attendance-log card" aria-live="polite">
+        <div class="log-header">
+          <h3>Attendance Log</h3>
+          <div class="log-meta"><span id="att-count">0</span> present</div>
+        </div>
+        <ol id="att-list" class="att-list">
+          <!-- logged names will appear here -->
+        </ol>
+        <div class="log-actions">
+          <button id="export-att-btn" class="btn btn-secondary" disabled>Export CSV</button>
+          <button id="save-session-btn" class="btn btn-primary" style="margin-left:8px">Save Session</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <small>Made with <strong>face-api.js</strong> • Models served from <code>/models</code></small>
+  </footer>
+</body>
+</html>
