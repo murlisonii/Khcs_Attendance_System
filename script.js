@@ -20,6 +20,44 @@ const manualNameInput = document.getElementById('manual-name-input');
 const manualAddBtn = document.getElementById('manual-add-btn');
 const clearSessionBtn = document.getElementById('clear-session-btn');
 const currentDateEl = document.getElementById('current-date');
+let modelsLoaded = false;
+// Admin modal elements
+const adminModal = document.getElementById('admin-modal');
+const adminModalClose = document.getElementById('admin-modal-close');
+const adminModalBackdrop = document.getElementById('admin-modal-backdrop');
+const tabLoginBtn = document.getElementById('tab-login');
+const tabSignupBtn = document.getElementById('tab-signup');
+const modalLoginEmail = document.getElementById('modal-login-email');
+const modalLoginPassword = document.getElementById('modal-login-password');
+const modalLoginBtn = document.getElementById('modal-login-btn');
+const modalLoginRemember = document.getElementById('modal-login-remember');
+const modalSignupName = document.getElementById('modal-signup-name');
+const modalSignupLocation = document.getElementById('modal-signup-location');
+const modalSignupEmail = document.getElementById('modal-signup-email');
+const modalSignupPassword = document.getElementById('modal-signup-password');
+const modalSignupPasswordConfirm = document.getElementById('modal-signup-password-confirm');
+const modalSignupBtn = document.getElementById('modal-signup-btn');
+const modalAuthStatus = document.getElementById('modal-auth-status');
+const modalOpenDashboardBtn = document.getElementById('modal-open-dashboard');
+// Admin drawer elements
+const adminToggleBtn = document.getElementById('open-admin-panel');
+const adminDrawer = document.getElementById('admin-drawer');
+const adminDrawerClose = document.getElementById('admin-drawer-close');
+const adminDrawerBackdrop = document.getElementById('admin-drawer-backdrop');
+const rosterListEl = document.getElementById('roster-list');
+const rosterRefreshBtn = document.getElementById('roster-refresh-btn');
+const rosterExportBtn = document.getElementById('roster-export-btn');
+const drawerAdminStatus = document.getElementById('drawer-admin-status');
+const adminNameInput = document.getElementById('admin-name');
+const adminLocationInput = document.getElementById('admin-location');
+const adminEmailInput = document.getElementById('admin-email');
+const adminPasswordInput = document.getElementById('admin-password');
+const adminSignupBtn = document.getElementById('admin-signup-btn');
+const adminLoginBtn = document.getElementById('admin-login-btn');
+const adminLogoutBtn = document.getElementById('admin-logout-btn');
+const newCaretakerNameInput = document.getElementById('new-caretaker-name');
+const newCaretakerAvatarInput = document.getElementById('new-caretaker-avatar');
+const addCaretakerBtn = document.getElementById('add-caretaker-btn');
 
 // persistence helpers
 function storageKeyForToday() {
@@ -85,6 +123,283 @@ function updateCurrentDate() {
   const now = new Date();
   currentDateEl.textContent = now.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
 }
+
+// Admin helpers
+function getAuthToken() {
+  // Check persistent storage first, then session storage as fallback
+  const t = localStorage.getItem('auth_token');
+  if (t) return t;
+  return sessionStorage.getItem('auth_token');
+}
+
+function updateAdminUIStatus() {
+  const token = getAuthToken();
+  if (drawerAdminStatus) {
+    if (token) {
+      drawerAdminStatus.textContent = 'Logged in';
+    } else {
+      drawerAdminStatus.textContent = 'Not logged in';
+    }
+  }
+  // also update embedded admin-status if present
+  const as = document.getElementById('admin-status');
+  if (as) as.textContent = token ? 'Logged in' : 'Not logged in';
+  // toggle auth buttons
+  if (adminSignupBtn) adminSignupBtn.style.display = token ? 'none' : 'inline-block';
+  if (adminLoginBtn) adminLoginBtn.style.display = token ? 'none' : 'inline-block';
+  if (adminLogoutBtn) adminLogoutBtn.style.display = token ? 'inline-block' : 'none';
+  // enable/disable start/manual-add based on auth + models
+  updateStartControls();
+}
+
+function isAdminLoggedIn() {
+  return !!getAuthToken();
+}
+
+function updateStartControls() {
+  const allow = modelsLoaded && isAdminLoggedIn();
+  if (startBtn) startBtn.disabled = !allow;
+  if (manualAddBtn) manualAddBtn.disabled = !isAdminLoggedIn();
+}
+
+async function fetchAndRenderRoster() {
+  if (!rosterListEl) return;
+  rosterListEl.innerHTML = '<li style="opacity:0.7;color:var(--muted)">Loading…</li>';
+  try {
+    const res = await fetch((BACKEND_URL || '') + '/api/labels');
+    if (!res.ok) throw new Error('Failed');
+    const j = await res.json();
+    const items = (j.items || []);
+    if (!items.length) {
+      rosterListEl.innerHTML = '<li style="color:var(--muted)">No caretakers yet</li>';
+      return;
+    }
+    rosterListEl.innerHTML = '';
+    items.forEach(it => {
+      const li = document.createElement('li');
+      li.className = 'roster-item';
+      const img = document.createElement('img');
+      img.src = it.avatarUrl || 'assets/logo.svg';
+      img.alt = it.name || '';
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.innerHTML = `<div style="font-weight:600;color:#e6eef8">${it.name}</div><div style="font-size:0.85rem;color:var(--muted)">id: ${it._id}</div>`;
+      li.appendChild(img);
+      li.appendChild(meta);
+      rosterListEl.appendChild(li);
+    });
+  } catch (e) {
+    rosterListEl.innerHTML = '<li style="color:var(--muted)">Failed to load roster</li>';
+  }
+}
+
+// Admin auth functions
+async function signupAdmin() {
+  try {
+    const name = adminNameInput && adminNameInput.value && adminNameInput.value.trim();
+    const location = adminLocationInput && adminLocationInput.value && adminLocationInput.value.trim();
+    const email = adminEmailInput && adminEmailInput.value && adminEmailInput.value.trim();
+    const password = adminPasswordInput && adminPasswordInput.value;
+    if (!name || !email || !password) {
+      if (drawerAdminStatus) drawerAdminStatus.textContent = 'Provide name, email and password';
+      return;
+    }
+    const res = await fetch((BACKEND_URL || '') + '/api/auth/signup', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password, location })
+    });
+    const j = await res.json();
+    if (!res.ok) {
+      if (drawerAdminStatus) drawerAdminStatus.textContent = 'Signup failed: ' + (j.error || res.statusText);
+      return;
+    }
+    // store token
+    localStorage.setItem('auth_token', j.token);
+    if (drawerAdminStatus) drawerAdminStatus.textContent = 'Signed up and logged in as ' + (j.user && j.user.name ? j.user.name : 'admin');
+    updateAdminUIStatus();
+    // clear password
+    if (adminPasswordInput) adminPasswordInput.value = '';
+  } catch (e) {
+    if (drawerAdminStatus) drawerAdminStatus.textContent = 'Signup error';
+  }
+}
+
+async function loginAdmin() {
+  try {
+    const email = adminEmailInput && adminEmailInput.value && adminEmailInput.value.trim();
+    const password = adminPasswordInput && adminPasswordInput.value;
+    if (!email || !password) {
+      if (drawerAdminStatus) drawerAdminStatus.textContent = 'Provide email and password';
+      return;
+    }
+    const res = await fetch((BACKEND_URL || '') + '/api/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password })
+    });
+    const j = await res.json();
+    if (!res.ok) {
+      if (drawerAdminStatus) drawerAdminStatus.textContent = 'Login failed: ' + (j.error || res.statusText);
+      return;
+    }
+    localStorage.setItem('auth_token', j.token);
+    if (drawerAdminStatus) drawerAdminStatus.textContent = 'Logged in as ' + (j.user && j.user.name ? j.user.name : 'admin');
+    if (adminPasswordInput) adminPasswordInput.value = '';
+    updateAdminUIStatus();
+  } catch (e) {
+    if (drawerAdminStatus) drawerAdminStatus.textContent = 'Login error';
+  }
+}
+
+function logoutAdmin() {
+  localStorage.removeItem('auth_token');
+  updateAdminUIStatus();
+  if (drawerAdminStatus) drawerAdminStatus.textContent = 'Logged out';
+}
+
+async function addCaretaker() {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      if (drawerAdminStatus) drawerAdminStatus.textContent = 'Login required to add caretaker';
+      return;
+    }
+    const name = newCaretakerNameInput && newCaretakerNameInput.value && newCaretakerNameInput.value.trim();
+    const avatarUrl = newCaretakerAvatarInput && newCaretakerAvatarInput.value && newCaretakerAvatarInput.value.trim();
+    if (!name) {
+      if (drawerAdminStatus) drawerAdminStatus.textContent = 'Enter caretaker name';
+      return;
+    }
+    const res = await fetch((BACKEND_URL || '') + '/api/labels', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ name, avatarUrl })
+    });
+    const j = await res.json();
+    if (!res.ok) {
+      if (drawerAdminStatus) drawerAdminStatus.textContent = 'Add failed: ' + (j.error || res.statusText);
+      return;
+    }
+    if (drawerAdminStatus) drawerAdminStatus.textContent = 'Caretaker added';
+    if (newCaretakerNameInput) newCaretakerNameInput.value = '';
+    if (newCaretakerAvatarInput) newCaretakerAvatarInput.value = '';
+    fetchAndRenderRoster();
+  } catch (e) {
+    if (drawerAdminStatus) drawerAdminStatus.textContent = 'Add caretaker error';
+  }
+}
+
+// wire admin button listeners
+if (adminSignupBtn) adminSignupBtn.addEventListener('click', signupAdmin);
+if (adminLoginBtn) adminLoginBtn.addEventListener('click', loginAdmin);
+if (adminLogoutBtn) adminLogoutBtn.addEventListener('click', () => { logoutAdmin(); });
+if (addCaretakerBtn) addCaretakerBtn.addEventListener('click', addCaretaker);
+
+function openAdminDrawer() {
+  if (!adminDrawer) return;
+  adminDrawer.classList.add('open');
+  if (adminDrawerBackdrop) { adminDrawerBackdrop.hidden = false; }
+  adminDrawer.setAttribute('aria-hidden', 'false');
+  fetchAndRenderRoster();
+  updateAdminUIStatus();
+}
+
+function closeAdminDrawer() {
+  if (!adminDrawer) return;
+  adminDrawer.classList.remove('open');
+  if (adminDrawerBackdrop) { adminDrawerBackdrop.hidden = true; }
+  adminDrawer.setAttribute('aria-hidden', 'true');
+}
+
+// admin button now opens the auth modal first (professional auth UI)
+function openAuthModal() {
+  if (!adminModal) { openAdminDrawer(); return; }
+  adminModal.setAttribute('aria-hidden', 'false');
+  adminModal.style.display = 'flex';
+  if (adminModalBackdrop) adminModalBackdrop.hidden = false;
+  if (modalAuthStatus) modalAuthStatus.textContent = isAdminLoggedIn() ? 'Signed in' : 'Not signed in';
+  // show open-dashboard only when logged in
+  if (modalOpenDashboardBtn) modalOpenDashboardBtn.style.display = isAdminLoggedIn() ? 'inline-block' : 'none';
+}
+
+function closeAuthModal() {
+  if (!adminModal) return;
+  adminModal.setAttribute('aria-hidden', 'true');
+  adminModal.style.display = 'none';
+  if (adminModalBackdrop) adminModalBackdrop.hidden = true;
+}
+
+if (adminToggleBtn) adminToggleBtn.addEventListener('click', openAuthModal);
+if (adminDrawerClose) adminDrawerClose.addEventListener('click', closeAdminDrawer);
+if (adminDrawerBackdrop) adminDrawerBackdrop.addEventListener('click', closeAdminDrawer);
+if (rosterRefreshBtn) rosterRefreshBtn.addEventListener('click', fetchAndRenderRoster);
+if (rosterExportBtn) rosterExportBtn.addEventListener('click', async () => {
+  try {
+    const res = await fetch((BACKEND_URL || '') + '/api/labels');
+    if (!res.ok) return;
+    const j = await res.json();
+    const rows = [['name','id','avatarUrl']].concat((j.items||[]).map(x=>[x.name,x._id,x.avatarUrl||'']));
+    const csv = rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'roster.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  } catch(e) {}
+});
+
+// ensure admin status initialized
+updateAdminUIStatus();
+
+// modal tab switching and controls
+if (adminModalClose) adminModalClose.addEventListener('click', closeAuthModal);
+if (adminModalBackdrop) adminModalBackdrop.addEventListener('click', closeAuthModal);
+if (tabLoginBtn) tabLoginBtn.addEventListener('click', () => { document.getElementById('auth-login-form').hidden = false; document.getElementById('auth-signup-form').hidden = true; tabLoginBtn.classList.add('active'); tabSignupBtn.classList.remove('active'); });
+if (tabSignupBtn) tabSignupBtn.addEventListener('click', () => { document.getElementById('auth-login-form').hidden = true; document.getElementById('auth-signup-form').hidden = false; tabSignupBtn.classList.add('active'); tabLoginBtn.classList.remove('active'); });
+
+// wire modal auth buttons (these perform login/signup using modal inputs)
+if (modalLoginBtn) modalLoginBtn.addEventListener('click', async () => {
+  const email = modalLoginEmail && modalLoginEmail.value && modalLoginEmail.value.trim();
+  const password = modalLoginPassword && modalLoginPassword.value;
+  if (!email || !password) { if (modalAuthStatus) modalAuthStatus.textContent = 'Enter email & password'; return; }
+  try {
+    const res = await fetch((BACKEND_URL || '') + '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+    const j = await res.json();
+    if (!res.ok) { if (modalAuthStatus) modalAuthStatus.textContent = 'Login failed: ' + (j.error || res.statusText); return; }
+    // store token persistently only if user asked to be remembered
+    try {
+      if (modalLoginRemember && modalLoginRemember.checked) {
+        localStorage.setItem('auth_token', j.token);
+      } else {
+        sessionStorage.setItem('auth_token', j.token);
+      }
+    } catch (e) { localStorage.setItem('auth_token', j.token); }
+    if (modalAuthStatus) modalAuthStatus.textContent = 'Logged in as ' + (j.user && j.user.name ? j.user.name : 'admin');
+    updateAdminUIStatus();
+    updateStartControls();
+    // show open-dashboard button
+    if (modalOpenDashboardBtn) modalOpenDashboardBtn.style.display = 'inline-block';
+    // optionally close modal automatically
+    setTimeout(() => closeAuthModal(), 700);
+  } catch (e) { if (modalAuthStatus) modalAuthStatus.textContent = 'Login error'; }
+});
+
+if (modalSignupBtn) modalSignupBtn.addEventListener('click', async () => {
+  const name = modalSignupName && modalSignupName.value && modalSignupName.value.trim();
+  const location = modalSignupLocation && modalSignupLocation.value && modalSignupLocation.value.trim();
+  const email = modalSignupEmail && modalSignupEmail.value && modalSignupEmail.value.trim();
+  const password = modalSignupPassword && modalSignupPassword.value;
+  const passwordConfirm = modalSignupPasswordConfirm && modalSignupPasswordConfirm.value;
+  if (!name || !email || !password) { if (modalAuthStatus) modalAuthStatus.textContent = 'Provide name,email,password'; return; }
+  if (passwordConfirm !== undefined && password !== passwordConfirm) { if (modalAuthStatus) modalAuthStatus.textContent = 'Passwords do not match'; return; }
+  try {
+    const res = await fetch((BACKEND_URL || '') + '/api/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password, location }) });
+    const j = await res.json();
+    if (!res.ok) { if (modalAuthStatus) modalAuthStatus.textContent = 'Signup failed: ' + (j.error || res.statusText); return; }
+    // store token persistently for new users (remember-by-default in this flow)
+    try { localStorage.setItem('auth_token', j.token); } catch (e) { sessionStorage.setItem('auth_token', j.token); }
+    if (modalAuthStatus) modalAuthStatus.textContent = 'Signed up and logged in as ' + (j.user && j.user.name ? j.user.name : 'admin');
+    updateAdminUIStatus();
+    updateStartControls();
+    if (modalOpenDashboardBtn) modalOpenDashboardBtn.style.display = 'inline-block';
+    setTimeout(() => closeAuthModal(), 700);
+  } catch (e) { if (modalAuthStatus) modalAuthStatus.textContent = 'Signup error'; }
+});
+
+if (modalOpenDashboardBtn) modalOpenDashboardBtn.addEventListener('click', () => { closeAuthModal(); openAdminDrawer(); });
 
 // initialize date and load any saved attendance for today
 updateCurrentDate();
@@ -171,11 +486,17 @@ Promise.all([
   if (statusEl) statusEl.textContent = 'Models loaded — preparing labels...';
   labeledFaceDescriptors = await getLabeledFaceDescriptions();
   faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors);
+  modelsLoaded = true;
   if (statusEl) statusEl.textContent = 'Ready — click Start to begin attendance';
-  if (startBtn) startBtn.disabled = false;
+  // enable start only when admin logged in as well
+  updateStartControls();
 });
 
 function startWebcam() {
+  if (!isAdminLoggedIn()) {
+    if (statusEl) statusEl.textContent = 'Admin login required to start attendance.';
+    return;
+  }
   navigator.mediaDevices
     .getUserMedia({
       video: true,
@@ -288,8 +609,9 @@ video.addEventListener("play", async () => {
     });
     results.forEach((result, i) => {
       const box = resizedDetections[i].detection.box;
+      // result is a faceapi.FaceMatch / BestMatch object — use its string form for the label
       const drawBox = new faceapi.draw.DrawBox(box, {
-        label: result,
+        label: result.toString(),
       });
       drawBox.draw(canvas);
       // If a person is recognized (not "unknown"), add to attendance log once
@@ -298,7 +620,9 @@ video.addEventListener("play", async () => {
         if (label && label !== 'unknown' && !loggedNames.has(label)) {
           const ts = new Date();
           loggedNames.add(label);
-          attendanceRecords.push({ name: label, time: ts.toISOString() });
+          // include a simple confidence metric (1 - distance) when available
+          const confidence = (typeof result.distance === 'number') ? +(1 - result.distance).toFixed(3) : null;
+          attendanceRecords.push({ name: label, time: ts.toISOString(), confidence });
           // update UI list
           if (attListEl) {
             const li = document.createElement('li');
@@ -315,7 +639,7 @@ video.addEventListener("play", async () => {
           // persist
           saveAttendanceToStorage();
           // send to backend (best-effort)
-          try { sendAttendanceToServer({ name: label, confidence: it.confidence, time: ts.toISOString() }); } catch(e) {}
+          try { sendAttendanceToServer({ name: label, confidence: (typeof result.distance === 'number') ? +(1 - result.distance).toFixed(3) : null, time: ts.toISOString() }); } catch(e) {}
         }
       } catch (e) {
         // non-fatal

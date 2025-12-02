@@ -24,7 +24,10 @@
         <div class="facility">Matki Chauraha, BJS — Jodhpur</div>
         <div id="current-date" class="current-date"></div>
       </div>
-      <span id="status" class="status">Loading models…</span>
+      <div class="header-controls">
+        <button id="open-admin-panel" class="btn" title="Open admin panel">Admin</button>
+        <span id="status" class="status">Loading models…</span>
+      </div>
     </div>
   </header>
 
@@ -54,6 +57,8 @@
             <button id="clear-session-btn" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06)">Clear Session</button>
           </div>
         </div>
+
+        <!-- Admin panel moved to the Admin drawer -->
       </div>
 
       <aside class="attendance-log card" aria-live="polite">
@@ -71,6 +76,122 @@
       </aside>
     </div>
   </main>
+
+  <!-- Admin slide-over panel -->
+  <div id="admin-drawer" class="admin-drawer" aria-hidden="true">
+    <div class="admin-drawer-header">
+      <h3>Admin dashboard</h3>
+      <button id="admin-drawer-close" class="btn">Close</button>
+    </div>
+    <div class="admin-drawer-body">
+      <div class="admin-drawer-section card" style="padding:12px">
+        <h4 style="margin:0 0 8px 0">Admin sign up / login</h4>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input id="admin-name" class="session-input" placeholder="Your name" />
+          <input id="admin-location" class="session-input" placeholder="Location" />
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input id="admin-email" class="session-input" placeholder="Email" />
+          <input id="admin-password" type="password" class="session-input" placeholder="Password" />
+        </div>
+        <div style="display:flex;gap:8px">
+          <button id="admin-signup-btn" class="btn">Sign up</button>
+          <button id="admin-login-btn" class="btn btn-primary">Login</button>
+          <button id="admin-logout-btn" class="btn" style="margin-left:auto;display:none">Logout</button>
+        </div>
+        <div id="admin-status" style="color:var(--muted);font-size:0.9rem;margin-top:8px">Not logged in</div>
+      </div>
+
+      <div class="admin-drawer-section card" style="padding:12px">
+        <h4 style="margin:0 0 8px 0">Add Caretaker</h4>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input id="new-caretaker-name" class="session-input" placeholder="Caretaker name" />
+          <input id="new-caretaker-avatar" class="session-input" placeholder="Avatar URL (optional)" />
+          <button id="add-caretaker-btn" class="btn btn-primary">Add Caretaker</button>
+        </div>
+      </div>
+      <div class="admin-drawer-section">
+        <div class="admin-drawer-actions">
+          <button id="roster-refresh-btn" class="btn">Refresh roster</button>
+          <button id="roster-export-btn" class="btn">Export roster</button>
+        </div>
+        <div class="admin-drawer-status">Status: <span id="drawer-admin-status">Not logged in</span></div>
+      </div>
+
+      <div class="admin-drawer-section">
+        <h4>Roster</h4>
+        <ul id="roster-list" class="roster-list">
+          <!-- roster items populated by JS -->
+        </ul>
+      </div>
+      <div style="flex:1"></div>
+    </div>
+  </div>
+  <div id="admin-drawer-backdrop" class="admin-drawer-backdrop" hidden></div>
+
+  <!-- Admin auth modal (professional-looking) -->
+  <div id="admin-modal" class="admin-modal" aria-hidden="true">
+    <div class="admin-modal-card">
+      <button id="admin-modal-close" class="btn modal-close">×</button>
+      <div class="auth-grid">
+        <div class="auth-illustration" role="img" aria-label="Login illustration"></div>
+        <div class="auth-forms">
+          <div class="admin-modal-header">
+            <h2 id="admin-modal-title">Welcome back</h2>
+            <p class="auth-sub">Sign in to manage caretakers and sessions</p>
+          </div>
+          <div class="admin-modal-tabs">
+            <button id="tab-login" class="tab-btn active">Login</button>
+            <button id="tab-signup" class="tab-btn">Sign up</button>
+          </div>
+          <div class="admin-modal-body">
+            <form id="auth-login-form" class="auth-form">
+              <label>Email
+                <input id="modal-login-email" class="session-input" type="email" placeholder="you@company.com" autocomplete="username" />
+              </label>
+              <label>Password
+                <input id="modal-login-password" class="session-input" type="password" placeholder="••••••••" autocomplete="current-password" />
+              </label>
+              <div class="remember-row">
+                <label class="remember-label">
+                  <input id="modal-login-remember" type="checkbox" /> Remember me
+                </label>
+                <a href="#" id="modal-forgot-link" class="forgot-link">Forgot?</a>
+              </div>
+              <div class="auth-actions">
+                <button id="modal-login-btn" type="button" class="btn btn-primary">Login</button>
+                <button id="modal-open-dashboard" type="button" class="btn" style="margin-left:auto;display:none">Open dashboard</button>
+              </div>
+            </form>
+
+            <form id="auth-signup-form" class="auth-form" hidden>
+              <label>Name
+                <input id="modal-signup-name" class="session-input" type="text" placeholder="Full name" autocomplete="name" />
+              </label>
+              <label>Location
+                <input id="modal-signup-location" class="session-input" type="text" placeholder="Location" />
+              </label>
+              <label>Email
+                <input id="modal-signup-email" class="session-input" type="email" placeholder="you@company.com" autocomplete="email" />
+              </label>
+              <label>Password
+                <input id="modal-signup-password" class="session-input" type="password" placeholder="Create a password" autocomplete="new-password" />
+              </label>
+              <label>Confirm password
+                <input id="modal-signup-password-confirm" class="session-input" type="password" placeholder="Repeat password" autocomplete="new-password" />
+              </label>
+              <div class="auth-actions">
+                <button id="modal-signup-btn" type="button" class="btn btn-primary">Sign up</button>
+              </div>
+            </form>
+
+            <div id="modal-auth-status" class="modal-status">Not signed in</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="admin-modal-backdrop" class="admin-drawer-backdrop" hidden></div>
 
   <footer class="site-footer">
     <small>Made with <strong>face-api.js</strong> • Models served from <code>/models</code></small>
