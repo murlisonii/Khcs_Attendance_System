@@ -17,5 +17,9 @@
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
-  }
+  },
+  "description": "This is a minimal Express + MongoDB backend for the face-recognition attendance demo.",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
