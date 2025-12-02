@@ -131,8 +131,37 @@ canvas{
 .admin-modal-card .modal-close{ position:absolute; right:16px; top:10px; background:transparent;border:0;color:#e6eef8;font-size:20px }
 
 .auth-grid{ display:flex; width:100%; min-height:420px; border-radius:12px; overflow:hidden }
-.auth-illustration{ flex:1 1 48%; background-image: url('loginDesign.jpg'), linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.12)); background-size:cover; background-position:center; position:relative }
-.auth-illustration::after{ content:''; position:absolute; inset:0; background: linear-gradient(180deg, rgba(7,10,18,0.3), rgba(7,10,18,0.45)); }
+.auth-illustration{
+    flex:1 1 48%;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.09));
+}
+
+.auth-illustration::before,
+.auth-illustration::after{
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(36px);
+    opacity: 0.95;
+}
+.auth-illustration::before{
+    width: 320px; height: 320px;
+    background: radial-gradient(circle at 30% 30%, rgba(16,185,129,0.95), rgba(16,185,129,0.12) 40%, transparent 60%);
+    top: -80px; left: -80px;
+}
+.auth-illustration::after{
+    width: 260px; height: 260px;
+    background: radial-gradient(circle at 70% 70%, rgba(6,182,212,0.95), rgba(6,182,212,0.12) 40%, transparent 60%);
+    bottom: -80px; right: -80px;
+}
+.auth-illustration .ill-content{ position:relative; z-index:2; color:#e6eef8; text-align:center; padding:20px; max-width:240px }
+.ill-title{ font-size:1.2rem; font-weight:700; margin-bottom:6px }
+.ill-sub{ color:var(--muted); font-size:0.95rem }
 .auth-forms{ flex:1 1 52%; background: rgba(7,10,18,0.96); padding:28px 28px; display:flex; flex-direction:column; gap:8px }
 .admin-modal-header{ margin-bottom:6px }
 .admin-modal-header h2{ margin:0 0 6px 0; font-size:1.4rem }
@@ -155,6 +184,17 @@ canvas{
 @media (max-width:880px){
     .auth-grid{ flex-direction:column; min-height: auto }
     .auth-illustration{ height:160px }
+}
+
+/* Landing choice buttons */
+.auth-choices{ display:flex; gap:12px; margin:10px 0 6px 0 }
+.choice-btn{ flex:1; padding:18px; border-radius:12px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.04); color:var(--muted); cursor:pointer; text-align:left }
+.choice-btn strong{ display:block; font-size:1.1rem; color:#e6eef8 }
+.choice-sub{ font-size:0.9rem; color:var(--muted); margin-top:6px }
+.choice-btn:hover{ transform:translateY(-4px); box-shadow:0 12px 30px rgba(2,6,23,0.5) }
+
+@media (max-width:640px){
+    .auth-choices{ flex-direction:column }
 }
 .auth-form{ display:flex; flex-direction:column; gap:8px }
 .auth-form label{ display:flex; flex-direction:column; font-size:0.95rem; color:var(--muted) }
