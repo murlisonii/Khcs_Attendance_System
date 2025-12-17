@@ -13,3 +13,4 @@ You can download the face-api.min.js library from [face-api official repository]
 ### models
 
 You can download the models I use in the video [here](https://github.com/justadudewhohacks/face-api.js/tree/master/weights).
+# Khcs_Attendance_System

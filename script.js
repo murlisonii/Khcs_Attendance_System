@@ -1,3 +1,5 @@
+//const BACKEND_URL = 'http://localhost:4000';
+
 const video = document.getElementById("video");
 const startBtn = document.getElementById('start-att-btn');
 const stopBtn = document.getElementById('stop-att-btn');
@@ -686,7 +688,7 @@ loadAttendanceFromStorage();
 scheduleMidnightReset();
 
 // Backend URL (empty = same origin)
-const BACKEND_URL = 'http://localhost:4000'; // if backend runs on another host, set e.g. 'http://localhost:4000'
+//const BACKEND_URL = 'http://localhost:4000'; // if backend runs on another host, set e.g. 'http://localhost:4000'
 
 async function sendAttendanceToServer(record) {
   try {
